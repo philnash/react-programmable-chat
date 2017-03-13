@@ -1,0 +1,21 @@
+{
+  "name": "react-programmable-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Phil Nash <philnash@twilio.com>",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "twilio": "^3.0.0rc.14"
+  },
+  "devDependencies": {
+    "dotenv": "^4.0.0"
+  }
+}
