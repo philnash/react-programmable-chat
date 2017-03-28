@@ -1,0 +1,22 @@
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  padding: 20px 40px;
+}
+
+.messages {
+  list-style-type: none;
+  height:350px;
+  overflow-y: scroll;
+  padding:0;
+  margin:0;
+}
+
+.messages li {
+  margin-bottom: 0.5em;
+  padding: 1em 0.5em;
+  background-color: #e8e8e8;
+}
+
