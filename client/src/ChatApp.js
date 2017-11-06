@@ -72,7 +72,10 @@ class ChatApp extends Component {
         .then(channel => {
           if (channel) {
             return (this.channel = channel);
-          } else {
+          }
+        })
+        .catch(err => {
+          if(err.body.code == 50300){
             return this.chatClient.createChannel({
               uniqueName: 'general'
             });
