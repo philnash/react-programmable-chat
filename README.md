@@ -31,6 +31,9 @@ Next, we need to install our dependencies from npm:
 
 ```bash
 npm install
+cd client/
+npm install
+cd ..
 ```
 
 Now you are ready! Run the application with
