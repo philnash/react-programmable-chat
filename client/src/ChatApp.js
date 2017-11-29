@@ -15,6 +15,7 @@ class ChatApp extends Component {
       messages: [],
       newMessage: ''
     };
+    this.channelName = 'general';
   }
 
   componentWillMount = () => {
@@ -68,16 +69,16 @@ class ChatApp extends Component {
   clientInitiated = () => {
     this.setState({ chatReady: true }, () => {
       this.chatClient
-        .getChannelByUniqueName('general')
+        .getChannelByUniqueName(this.channelName)
         .then(channel => {
           if (channel) {
             return (this.channel = channel);
           }
         })
         .catch(err => {
-          if(err.body.code == 50300){
+          if(err.body.code === 50300){
             return this.chatClient.createChannel({
-              uniqueName: 'general'
+              uniqueName: this.channelName
             });
           }
         })
