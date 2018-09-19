@@ -18,7 +18,7 @@ class ChatApp extends Component {
     this.channelName = 'general';
   }
 
-  componentWillMount = () => {
+  componentDidMount = () => {
     if (this.state.loggedIn) {
       this.getToken();
     }
