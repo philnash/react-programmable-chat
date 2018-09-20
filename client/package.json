@@ -7,12 +7,12 @@
     "@progress/kendo-react-buttons": "^2.0.0",
     "@progress/kendo-react-conversational-ui": "^2.0.0",
     "@progress/kendo-react-intl": "^2.0.0",
-    "react": "^15.4.2",
-    "react-dom": "^15.4.2",
-    "twilio-chat": "^0.11.1"
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "twilio-chat": "^2.0.0"
   },
   "devDependencies": {
-    "react-scripts": "0.9.5"
+    "react-scripts": "1.1.5"
   },
   "scripts": {
     "start": "react-scripts start",

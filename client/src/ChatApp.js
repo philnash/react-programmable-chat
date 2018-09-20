@@ -21,9 +21,6 @@ class ChatApp extends Component {
   }
 
   startTyping = event => {
-    if (event.keyCode == 13) {
-      return;
-    }
     this.channel.typing();
   };
 
@@ -74,10 +71,10 @@ class ChatApp extends Component {
       });
   };
 
-  initChat = () => {
-    this.chatClient = new Chat(this.state.token);
+  async initChat() {
+    this.chatClient = await Chat.create(this.state.token);
     this.chatClient.initialize().then(this.clientInitiated.bind(this));
-  };
+  }
 
   clientInitiated = () => {
     this.setState({ chatReady: true }, () => {
@@ -98,7 +95,9 @@ class ChatApp extends Component {
         .then(channel => {
           this.channel = channel;
           window.channel = channel;
-          return this.channel.join();
+          return this.channel.join().catch(() => {
+            return;
+          });
         })
         .then(() => {
           this.channel.getMessages().then(this.messagesLoaded);
