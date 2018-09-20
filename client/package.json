@@ -9,7 +9,7 @@
     "@progress/kendo-react-intl": "^2.0.0",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
-    "twilio-chat": "^2.0.0"
+    "twilio-chat": "^3.0.2"
   },
   "devDependencies": {
     "react-scripts": "1.1.5"
