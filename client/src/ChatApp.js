@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import NameBox from './NameBox.js';
 import Chat from 'twilio-chat';
+import { Chat as ChatUI } from '@progress/kendo-react-conversational-ui';
 
 class ChatApp extends Component {
   constructor(props) {
@@ -15,14 +16,26 @@ class ChatApp extends Component {
       messages: [],
       newMessage: ''
     };
+    this.membersTyping = new Set();
     this.channelName = 'general';
   }
+
+  startTyping = event => {
+    if (event.keyCode == 13) {
+      return;
+    }
+    this.channel.typing();
+  };
 
   componentDidMount = () => {
     if (this.state.loggedIn) {
       this.getToken();
     }
+    this.input = document.querySelector('.k-input');
+    this.input.addEventListener('keydown', this.startTyping);
   };
+
+  componentWillUnmount = () => {};
 
   onNameChanged = event => {
     this.setState({ name: event.target.value });
@@ -76,7 +89,7 @@ class ChatApp extends Component {
           }
         })
         .catch(err => {
-          if(err.body.code === 50300){
+          if (err.body.code === 50300) {
             return this.chatClient.createChannel({
               uniqueName: this.channelName
             });
@@ -90,29 +103,122 @@ class ChatApp extends Component {
         .then(() => {
           this.channel.getMessages().then(this.messagesLoaded);
           this.channel.on('messageAdded', this.messageAdded);
+          this.channel.on('typingStarted', this.typingStarted);
+          this.channel.on('typingEnded', this.typingEnded);
         });
     });
   };
 
-  messagesLoaded = messagePage => {
-    this.setState({ messages: messagePage.items });
-  };
-
-  messageAdded = message => {
-    this.setState((prevState, props) => ({
-      messages: [...prevState.messages, message]
+  typingStarted = member => {
+    console.log('typingStarted');
+    this.membersTyping.add(member.identity);
+    const author = {
+      id: Array.from(this.membersTyping).join(', '),
+      name: Array.from(this.membersTyping).join(', ')
+    };
+    const typingMessage = {
+      author: author,
+      typing: true
+    };
+    this.setState(prevState => ({
+      messages: [
+        ...this.removeLastTypingMessage(prevState.messages),
+        typingMessage
+      ]
     }));
   };
 
-  onMessageChanged = event => {
-    this.setState({ newMessage: event.target.value });
+  removeLastTypingMessage(messages) {
+    if (messages[messages.length - 1].typing) {
+      return messages.slice(0, messages.length - 1);
+    }
+    return messages;
+  }
+
+  typingEnded = member => {
+    console.log('typingEnded');
+    this.membersTyping.delete(member.identity);
+    this.setState(prevState => {
+      if (this.membersTyping.size === 0) {
+        return { messages: this.removeLastTypingMessage(prevState.messages) };
+      } else {
+        const author = {
+          id: Array.from(this.membersTyping).join(', '),
+          name: Array.from(this.membersTyping).join(', ')
+        };
+        const typingMessage = {
+          author: author,
+          typing: true
+        };
+        return {
+          messages: [
+            ...this.removeLastTypingMessage(prevState.messages),
+            typingMessage
+          ]
+        };
+      }
+    });
+  };
+
+  messagesLoaded = messagePage => {
+    const messages = messagePage.items.map(message => {
+      return {
+        text: message.body,
+        timestamp: message.timestamp,
+        author: {
+          id: message.author,
+          name: message.author
+        }
+      };
+    });
+    // const botMessage = {
+    //   text: 'This is a bot',
+    //   author: {
+    //     id: 'bot'
+    //   },
+    //   suggestedActions: [
+    //     {
+    //       value: 'A sample reply',
+    //       type: 'reply'
+    //     },
+    //     {
+    //       title: 'A sample link',
+    //       value: '#link',
+    //       type: 'openUrl'
+    //     },
+    //     {
+    //       title: 'Place a call',
+    //       value: '555-123-456',
+    //       type: 'call'
+    //     },
+    //     {
+    //       title: 'A custom action',
+    //       value: 'Custom action clicked',
+    //       type: 'alert'
+    //     }
+    //   ]
+    // };
+    this.setState({ messages });
+  };
+
+  messageAdded = message => {
+    console.log('messageAdded');
+    const newMessage = {
+      text: message.body,
+      author: { id: message.author, name: message.author },
+      timestamp: message.timestamp
+    };
+
+    this.setState(prevState => {
+      return {
+        messages: [...prevState.messages, newMessage]
+      };
+    });
   };
 
   sendMessage = event => {
-    event.preventDefault();
-    const message = this.state.newMessage;
-    this.setState({ newMessage: '' });
-    this.channel.sendMessage(message);
+    const message = event.message;
+    this.channel.sendMessage(message.text);
   };
 
   newMessageAdded = li => {
@@ -121,38 +227,27 @@ class ChatApp extends Component {
     }
   };
 
+  onActionExecute = event => {
+    alert(event.action.type);
+  };
+
+  onAction = event => {
+    console.log(event);
+  };
+
   render() {
     var loginOrChat;
-    const messages = this.state.messages.map(message => {
-      return (
-        <li key={message.sid} ref={this.newMessageAdded}>
-          <b>{message.author}:</b> {message.body}
-        </li>
-      );
-    });
     if (this.state.loggedIn) {
+      const user = { id: this.state.name, name: this.state.name };
       loginOrChat = (
         <div>
-          <h3>Messages</h3>
           <p>Logged in as {this.state.name}</p>
-          <ul className="messages">
-            {messages}
-          </ul>
-          <form onSubmit={this.sendMessage}>
-            <label htmlFor="message">Message: </label>
-            <input
-              type="text"
-              name="message"
-              id="message"
-              onChange={this.onMessageChanged}
-              value={this.state.newMessage}
-            />
-            <button>Send</button>
-          </form>
-          <br /><br />
-          <form onSubmit={this.logOut}>
-            <button>Log out</button>
-          </form>
+          <ChatUI
+            user={user}
+            messages={this.state.messages}
+            onMessageSend={this.sendMessage}
+            onActionExecute={this.onActionExecute}
+          />
         </div>
       );
     } else {
@@ -166,11 +261,7 @@ class ChatApp extends Component {
         </div>
       );
     }
-    return (
-      <div>
-        {loginOrChat}
-      </div>
-    );
+    return <div>{loginOrChat}</div>;
   }
 }
 
