@@ -109,7 +109,6 @@ class ChatApp extends Component {
   };
 
   typingStarted = member => {
-    console.log('typingStarted');
     this.membersTyping.add(member.identity);
     const author = {
       id: Array.from(this.membersTyping).join(', '),
@@ -159,17 +158,20 @@ class ChatApp extends Component {
     });
   };
 
+  mapMessagePagetoMessages(messagePage) {
+    return messagePage.items.map(message => ({
+      text: message.body,
+      timestamp: message.timestamp,
+      author: {
+        id: message.author,
+        name: message.author
+      }
+    }));
+  }
+
   messagesLoaded = messagePage => {
-    const messages = messagePage.items.map(message => {
-      return {
-        text: message.body,
-        timestamp: message.timestamp,
-        author: {
-          id: message.author,
-          name: message.author
-        }
-      };
-    });
+    this.lastMessageIndex = messagePage.items[0].index - 1;
+    const messages = this.mapMessagePagetoMessages(messagePage);
     // const botMessage = {
     //   text: 'This is a bot',
     //   author: {
@@ -197,11 +199,36 @@ class ChatApp extends Component {
     //     }
     //   ]
     // };
-    this.setState({ messages });
+    this.setState({ messages }, () => {
+      this.topMessage = document.querySelector('.k-message-list-content > div');
+      this.chatWindow = document.querySelector('.k-message-list');
+      this.intersectionObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && this.lastMessageIndex > 0) {
+              this.channel
+                .getMessages(30, this.lastMessageIndex)
+                .then(messagePage => {
+                  this.lastMessageIndex = messagePage.items[0].index - 1;
+                  const messages = this.mapMessagePagetoMessages(messagePage);
+                  this.setState(prevState => ({
+                    messages: [...messages, ...prevState.messages]
+                  }));
+                });
+            }
+          });
+        },
+        {
+          root: this.chatWindow
+        }
+      );
+      setTimeout(() => {
+        this.intersectionObserver.observe(this.topMessage);
+      }, 1000);
+    });
   };
 
   messageAdded = message => {
-    console.log('messageAdded');
     const newMessage = {
       text: message.body,
       author: { id: message.author, name: message.author },
